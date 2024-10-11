@@ -22,6 +22,7 @@ qt_internal_add_module(NetworkAuth
         Qt::Network
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
+    OS2_SHORT_NAME Qt6NetAu
 )
 
 #### Keys ignored in scope 1:.:.:oauth.pro:<TRUE>:
