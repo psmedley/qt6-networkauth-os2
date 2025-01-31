@@ -1,0 +1,17 @@
+--- src/oauth/CMakeLists.txt	2024-12-16 16:44:33.000000000 +1030
++++ src/oauth/CMakeLists.txt	2025-01-24 16:00:57.000000000 +1030
+@@ -25,6 +28,14 @@
+         Qt::Network
+     PRIVATE_MODULE_INTERFACE
+         Qt::CorePrivate
++    NO_GENERATE_CPP_EXPORTS
++)
++
++qt_internal_extend_target(NetworkAuth CONDITION QT_FEATURE_urischeme_replyhandler
++    SOURCES
++        qoauthurischemereplyhandler.cpp qoauthurischemereplyhandler.h
++    LIBRARIES
++        Qt::Gui
+ )
+ 
+ #### Keys ignored in scope 1:.:.:oauth.pro:<TRUE>:

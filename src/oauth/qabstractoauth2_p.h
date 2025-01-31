@@ -1,31 +1,5 @@
-/****************************************************************************
-**
-** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the Qt Network Auth module of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:GPL$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3 or (at your option) any later version
-** approved by the KDE Free Qt Foundation. The licenses are as published by
-** the Free Software Foundation and appearing in the file LICENSE.GPL3
-** included in the packaging of this file. Please review the following
-** information to ensure the GNU General Public License requirements will
-** be met: https://www.gnu.org/licenses/gpl-3.0.html.
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+// Copyright (C) 2017 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 //
 //  W A R N I N G
@@ -41,7 +15,7 @@
 #ifndef QABSTRACTOAUTH2_P_H
 #define QABSTRACTOAUTH2_P_H
 
-#ifndef QT_NO_HTTP
+#include <optional>
 
 #include <private/qabstractoauth_p.h>
 
@@ -54,6 +28,8 @@
 
 #include <QtNetwork/qnetworkreply.h>
 
+#include <utility>
+
 QT_BEGIN_NAMESPACE
 
 class QNetworkAccessManager;
@@ -63,10 +39,11 @@ class QAbstractOAuth2Private : public QAbstractOAuthPrivate
     Q_DECLARE_PUBLIC(QAbstractOAuth2)
 
 public:
-    QAbstractOAuth2Private(const QPair<QString, QString> &clientCredentials,
+    QAbstractOAuth2Private(const std::pair<QString, QString> &clientCredentials,
                            const QUrl &authorizationUrl, QNetworkAccessManager *manager = nullptr);
     ~QAbstractOAuth2Private();
 
+    void setExpiresAt(const QDateTime &expiration);
     static QString generateRandomState();
     QNetworkRequest createRequest(QUrl url, const QVariantMap *parameters = nullptr);
 
@@ -76,8 +53,11 @@ public:
     QString userAgent = QStringLiteral("QtOAuth/1.0 (+https://www.qt.io)");
     QString responseType;
     const QString bearerFormat = QStringLiteral("Bearer %1"); // Case sensitive
-    QDateTime expiresAt;
+    QDateTime expiresAtUtc;
     QString refreshToken;
+#ifndef QT_NO_SSL
+    std::optional<QSslConfiguration> sslConfiguration;
+#endif
 
     struct OAuth2KeyString
     {
@@ -97,11 +77,12 @@ public:
         static const QString scope;
         static const QString state;
         static const QString tokenType;
+        static const QString codeVerifier;
+        static const QString codeChallenge;
+        static const QString codeChallengeMethod;
     };
 };
 
 QT_END_NAMESPACE
-
-#endif // QT_NO_HTTP
 
 #endif // QABSTRACTOAUTH2_P_H

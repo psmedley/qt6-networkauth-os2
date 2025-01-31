@@ -1,5 +1,0 @@
-[requires]
-qtnetworkauth/6.2.11@qt/everywhere
-
-[generators]
-virtualenv

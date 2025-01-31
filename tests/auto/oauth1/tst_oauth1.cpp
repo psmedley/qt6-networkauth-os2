@@ -1,30 +1,5 @@
-/****************************************************************************
-**
-** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the test suite of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:GPL-EXCEPT$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3 as published by the Free Software
-** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
-** included in the packaging of this file. Please review the following
-** information to ensure the GNU General Public License requirements will
-** be met: https://www.gnu.org/licenses/gpl-3.0.html.
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+// Copyright (C) 2017 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore>
 #include <QtTest>
@@ -51,7 +26,7 @@ class tst_OAuth1 : public QObject
 {
     Q_OBJECT
 
-    using StringPair = QPair<QString, QString>;
+    using StringPair = std::pair<QString, QString>;
 
     QEventLoop *loop = nullptr;
     enum RunSimpleRequestReturn { Timeout = 0, Success, Failure };
@@ -97,7 +72,7 @@ public:
             QOAuth1 obj;
             Type expectedValue;
             QSignalSpy spy(&obj, signal);
-            connect(&obj, signal, [&](const Type &value) {
+            connect(&obj, signal, &obj, [&](const Type &value) {
                 QCOMPARE(expectedValue, value);
             });
             for (const auto &setter : setters) {
@@ -105,7 +80,7 @@ public:
                 setter(&expectedValue, &obj);
                 QVERIFY(previous != expectedValue); // To check if the value was modified
             }
-            QCOMPARE(spy.count(), setters.size()); // The signal should be emitted
+            QCOMPARE(spy.size(), setters.size()); // The signal should be emitted
         }
 
     public:
@@ -210,11 +185,11 @@ int tst_OAuth1::waitForFinish(QNetworkReplyPtr &reply)
     QSignalSpy spy(reply.data(), SIGNAL(downloadProgress(qint64,qint64)));
     while (!reply->isFinished()) {
         QTimer::singleShot(5000, loop, SLOT(quit()));
-        if (loop->exec() == Timeout && count == spy.count() && !reply->isFinished()) {
+        if (loop->exec() == Timeout && count == spy.size() && !reply->isFinished()) {
             returnCode = Timeout;
             break;
         }
-        count = spy.count();
+        count = spy.size();
     }
     delete loop;
     loop = nullptr;
@@ -252,7 +227,7 @@ void tst_OAuth1::clientIdentifierSignal()
         },
         [](QString *expectedValue, QOAuth1 *object) {
             *expectedValue = "setClientCredentials";
-            object->setClientCredentials(qMakePair(*expectedValue, QString()));
+            object->setClientCredentials(std::make_pair(*expectedValue, QString()));
         }
     };
     PropertyTester::run(&QOAuth1::clientIdentifierChanged, setters);
@@ -268,7 +243,7 @@ void tst_OAuth1::clientSharedSecretSignal()
         },
         [](QString *expectedValue, QOAuth1 *object) {
             *expectedValue = "setClientCredentials";
-            object->setClientCredentials(qMakePair(QString(), *expectedValue));
+            object->setClientCredentials(std::make_pair(QString(), *expectedValue));
         }
     };
     PropertyTester::run(&QOAuth1::clientSharedSecretChanged, setters);
@@ -284,7 +259,7 @@ void tst_OAuth1::tokenSignal()
         },
         [](QString *expectedValue, QOAuth1 *object) {
             *expectedValue = "setTokenCredentials";
-            object->setTokenCredentials(qMakePair(*expectedValue, QString()));
+            object->setTokenCredentials(std::make_pair(*expectedValue, QString()));
         }
     };
     PropertyTester::run(&QOAuth1::tokenChanged, setters);
@@ -300,7 +275,7 @@ void tst_OAuth1::tokenSecretSignal()
         },
         [](QString *expectedValue, QOAuth1 *object) {
             *expectedValue = "setTokenCredentials";
-            object->setTokenCredentials(qMakePair(QString(), *expectedValue));
+            object->setTokenCredentials(std::make_pair(QString(), *expectedValue));
         }
     };
     PropertyTester::run(&QOAuth1::tokenSecretChanged, setters);
@@ -365,58 +340,58 @@ void tst_OAuth1::getToken_data()
 
     const StringPair emptyCredentials;
     QTest::newRow("temporary_get_plainText")
-            << qMakePair(QStringLiteral("key"), QStringLiteral("secret"))
+            << std::make_pair(QStringLiteral("key"), QStringLiteral("secret"))
             << emptyCredentials
-            << qMakePair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
+            << std::make_pair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
             << QOAuth1::SignatureMethod::PlainText
             << QNetworkAccessManager::GetOperation;
 
     QTest::newRow("temporary_get_hmacSha1")
-            << qMakePair(QStringLiteral("key"), QStringLiteral("secret"))
+            << std::make_pair(QStringLiteral("key"), QStringLiteral("secret"))
             << emptyCredentials
-            << qMakePair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
+            << std::make_pair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
             << QOAuth1::SignatureMethod::Hmac_Sha1
             << QNetworkAccessManager::GetOperation;
 
     QTest::newRow("temporary_post_plainText")
-            << qMakePair(QStringLiteral("key"), QStringLiteral("secret"))
+            << std::make_pair(QStringLiteral("key"), QStringLiteral("secret"))
             << emptyCredentials
-            << qMakePair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
+            << std::make_pair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
             << QOAuth1::SignatureMethod::PlainText
             << QNetworkAccessManager::PostOperation;
 
     QTest::newRow("temporary_post_hmacSha1")
-            << qMakePair(QStringLiteral("key"), QStringLiteral("secret"))
+            << std::make_pair(QStringLiteral("key"), QStringLiteral("secret"))
             << emptyCredentials
-            << qMakePair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
+            << std::make_pair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
             << QOAuth1::SignatureMethod::Hmac_Sha1
             << QNetworkAccessManager::PostOperation;
 
     QTest::newRow("token_get_plainText")
-            << qMakePair(QStringLiteral("key"), QStringLiteral("secret"))
-            << qMakePair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
-            << qMakePair(QStringLiteral("accesskey"), QStringLiteral("accesssecret"))
+            << std::make_pair(QStringLiteral("key"), QStringLiteral("secret"))
+            << std::make_pair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
+            << std::make_pair(QStringLiteral("accesskey"), QStringLiteral("accesssecret"))
             << QOAuth1::SignatureMethod::PlainText
             << QNetworkAccessManager::GetOperation;
 
     QTest::newRow("token_get_hmacSha1")
-            << qMakePair(QStringLiteral("key"), QStringLiteral("secret"))
-            << qMakePair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
-            << qMakePair(QStringLiteral("accesskey"), QStringLiteral("accesssecret"))
+            << std::make_pair(QStringLiteral("key"), QStringLiteral("secret"))
+            << std::make_pair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
+            << std::make_pair(QStringLiteral("accesskey"), QStringLiteral("accesssecret"))
             << QOAuth1::SignatureMethod::Hmac_Sha1
             << QNetworkAccessManager::GetOperation;
 
     QTest::newRow("token_post_plainText")
-            << qMakePair(QStringLiteral("key"), QStringLiteral("secret"))
-            << qMakePair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
-            << qMakePair(QStringLiteral("accesskey"), QStringLiteral("accesssecret"))
+            << std::make_pair(QStringLiteral("key"), QStringLiteral("secret"))
+            << std::make_pair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
+            << std::make_pair(QStringLiteral("accesskey"), QStringLiteral("accesssecret"))
             << QOAuth1::SignatureMethod::PlainText
             << QNetworkAccessManager::PostOperation;
 
     QTest::newRow("token_post_hmacSha1")
-            << qMakePair(QStringLiteral("key"), QStringLiteral("secret"))
-            << qMakePair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
-            << qMakePair(QStringLiteral("accesskey"), QStringLiteral("accesssecret"))
+            << std::make_pair(QStringLiteral("key"), QStringLiteral("secret"))
+            << std::make_pair(QStringLiteral("requestkey"), QStringLiteral("requestsecret"))
+            << std::make_pair(QStringLiteral("accesskey"), QStringLiteral("accesssecret"))
             << QOAuth1::SignatureMethod::Hmac_Sha1
             << QNetworkAccessManager::PostOperation;
 }
@@ -435,7 +410,7 @@ void tst_OAuth1::getToken()
     QMultiMap<QString, QVariant> oauthHeaders;
 
     WebServer webServer([&](const WebServer::HttpRequest &request, QTcpSocket *socket) {
-        oauthHeaders = parseAuthorizationString(request.headers["Authorization"]);
+        oauthHeaders = parseAuthorizationString(request.headers["authorization"]);
         const QString format = "oauth_token=%1&oauth_token_secret=%2";
         const QByteArray text = format.arg(expectedToken.first, expectedToken.second).toUtf8();
         const QByteArray replyMessage {
@@ -461,10 +436,10 @@ void tst_OAuth1::getToken()
     QVariantMap parameters {{ "c2&a3", "c2=a3" }};
     reply.reset(o1.requestTokenCredentials(requestType, url, token, parameters));
     QVERIFY(!reply.isNull());
-    connect(&o1, &QOAuth1::tokenChanged, [&tokenReceived](const QString &token){
+    connect(&o1, &QOAuth1::tokenChanged, this, [&tokenReceived](const QString &token){
         tokenReceived.first = token;
     });
-    connect(&o1, &QOAuth1::tokenSecretChanged, [&tokenReceived](const QString &tokenSecret) {
+    connect(&o1, &QOAuth1::tokenSecretChanged, this, [&tokenReceived](const QString &tokenSecret) {
         tokenReceived.second = tokenSecret;
     });
     QVERIFY(waitForFinish(reply) == Success);
@@ -669,20 +644,20 @@ void tst_OAuth1::grant()
         QSignalSpy clientIdentifierSpy(&o1, &QOAuth1::clientIdentifierChanged);
         QSignalSpy clientSharedSecretSpy(&o1, &QOAuth1::clientSharedSecretChanged);
         o1.setClientCredentials(consumerKey, consumerSecret);
-        QCOMPARE(clientIdentifierSpy.count(), 1);
-        QCOMPARE(clientSharedSecretSpy.count(), 1);
+        QCOMPARE(clientIdentifierSpy.size(), 1);
+        QCOMPARE(clientSharedSecretSpy.size(), 1);
     }
     {
         QSignalSpy spy(&o1, &QOAuth1::temporaryCredentialsUrlChanged);
         o1.setTemporaryCredentialsUrl(requestTokenUrl);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
     }
     {
         QSignalSpy spy(&o1, &QOAuth1::tokenCredentialsUrlChanged);
         o1.setTokenCredentialsUrl(accessTokenUrl);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
     }
-    connect(&o1, &QAbstractOAuth::statusChanged, [&](QAbstractOAuth::Status status) {
+    connect(&o1, &QAbstractOAuth::statusChanged, this, [&](QAbstractOAuth::Status status) {
         if (status == QAbstractOAuth::Status::TemporaryCredentialsReceived) {
             if (!requestToken.isEmpty())
                 QCOMPARE(requestToken, o1.tokenCredentials().first);
@@ -706,7 +681,7 @@ void tst_OAuth1::grant()
     o1.grant();
     eventLoop.exec();
     QVERIFY(tokenReceived);
-    QCOMPARE(grantSignalSpy.count(), 1);
+    QCOMPARE(grantSignalSpy.size(), 1);
     QCOMPARE(o1.status(), QAbstractOAuth::Status::Granted);
 }
 
@@ -794,7 +769,7 @@ void tst_OAuth1::authenticatedCalls()
     QVERIFY(!reply.isNull());
     QVERIFY(!reply->isFinished());
 
-    connect(&networkAccessManager, &QNetworkAccessManager::finished,
+    connect(&networkAccessManager, &QNetworkAccessManager::finished, this,
             [&](QNetworkReply *reply) {
         QByteArray data = reply->readAll();
         QUrlQuery query(QString::fromUtf8(data));
@@ -908,7 +883,7 @@ void tst_OAuth1::prepareRequestCalls()
     QVERIFY(!reply.isNull());
     QVERIFY(!reply->isFinished());
 
-    connect(&networkAccessManager, &QNetworkAccessManager::finished,
+    connect(&networkAccessManager, &QNetworkAccessManager::finished, this,
             [&](QNetworkReply *reply) {
         QByteArray data = reply->readAll();
         QUrlQuery query(QString::fromUtf8(data));
@@ -923,7 +898,7 @@ void tst_OAuth1::secondTemporaryToken()
 {
     QNetworkAccessManager networkAccessManager;
 
-    const StringPair expectedToken(qMakePair(QStringLiteral("temporaryKey"), QStringLiteral("temporaryToken")));
+    const StringPair expectedToken(std::make_pair(QStringLiteral("temporaryKey"), QStringLiteral("temporaryToken")));
     WebServer webServer([&](const WebServer::HttpRequest &request, QTcpSocket *socket) {
         Q_UNUSED(request);
         const QString format = "oauth_token=%1&oauth_token_secret=%2&oauth_callback_confirmed=true";
@@ -939,18 +914,19 @@ void tst_OAuth1::secondTemporaryToken()
 
     QOAuth1 o1(&networkAccessManager);
 
-    StringPair clientCredentials = qMakePair(QStringLiteral("user"), QStringLiteral("passwd"));
+    StringPair clientCredentials = std::make_pair(QStringLiteral("user"), QStringLiteral("passwd"));
     o1.setClientCredentials(clientCredentials);
     o1.setTemporaryCredentialsUrl(webServer.url(QStringLiteral("temporary")));
     o1.setAuthorizationUrl(webServer.url(QStringLiteral("authorization")));
     o1.setTokenCredentialsUrl(webServer.url(QStringLiteral("token")));
 
     StringPair tokenReceived;
-    connect(&o1, &QOAuth1::tokenChanged, [&tokenReceived](const QString &token) {
+    connect(&o1, &QOAuth1::tokenChanged, this, [&tokenReceived](const QString &token) {
         tokenReceived.first = token;
     });
     bool replyReceived = false;
-    connect(&o1, &QOAuth1::tokenSecretChanged, [&tokenReceived, &replyReceived](const QString &tokenSecret) {
+    connect(&o1, &QOAuth1::tokenSecretChanged,
+            this, [&tokenReceived, &replyReceived](const QString &tokenSecret) {
         tokenReceived.second = tokenSecret;
         replyReceived = true;
     });

@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Generated from oauthhttpserverreplyhandler.pro.
 
 #####################################################################
@@ -6,8 +9,11 @@
 
 qt_internal_add_test(tst_oauthhttpserverreplyhandler
     SOURCES
+        ../shared/webserver.h
         tst_oauthhttpserverreplyhandler.cpp
-    PUBLIC_LIBRARIES
+    INCLUDE_DIRECTORIES
+        ../shared
+    LIBRARIES
         Qt::CorePrivate
         Qt::Network
         Qt::NetworkAuth

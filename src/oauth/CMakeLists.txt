@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Generated from oauth.pro.
 
 #####################################################################
@@ -14,7 +17,7 @@ qt_internal_add_module(NetworkAuth
         qoauth2authorizationcodeflow.cpp qoauth2authorizationcodeflow.h qoauth2authorizationcodeflow_p.h
         qoauthglobal.h
         qoauthhttpserverreplyhandler.cpp qoauthhttpserverreplyhandler.h qoauthhttpserverreplyhandler_p.h
-        qoauthoobreplyhandler.cpp qoauthoobreplyhandler.h
+        qoauthoobreplyhandler.cpp qoauthoobreplyhandler.h qoauthoobreplyhandler_p.h
     LIBRARIES
         Qt::CorePrivate
     PUBLIC_LIBRARIES
@@ -22,7 +25,15 @@ qt_internal_add_module(NetworkAuth
         Qt::Network
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
+    NO_GENERATE_CPP_EXPORTS
     OS2_SHORT_NAME Qt6NetAu
+)
+
+qt_internal_extend_target(NetworkAuth CONDITION QT_FEATURE_urischeme_replyhandler
+    SOURCES
+        qoauthurischemereplyhandler.cpp qoauthurischemereplyhandler.h
+    LIBRARIES
+        Qt::Gui
 )
 
 #### Keys ignored in scope 1:.:.:oauth.pro:<TRUE>:

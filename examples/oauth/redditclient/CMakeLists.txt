@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
 # Generated from redditclient.pro.
 
 cmake_minimum_required(VERSION 3.16)
@@ -24,7 +27,6 @@ find_package(Qt6 COMPONENTS NetworkAuth)
 qt_add_executable(redditclient
     main.cpp
     redditmodel.cpp redditmodel.h
-    redditwrapper.cpp redditwrapper.h
 )
 set_target_properties(redditclient PROPERTIES
     WIN32_EXECUTABLE TRUE

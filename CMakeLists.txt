@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Generated from qtnetworkauth.pro.
 
 cmake_minimum_required(VERSION 3.16)
@@ -10,16 +13,9 @@ project(QtNetworkAuth
     LANGUAGES CXX C
 )
 
-# special case begin
-# Make sure we only use latest private CMake API, aka no compatibility wrappers.
-set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
-
-# Make sure we use the fixed BASE argument of qt_add_resource.
-set(QT_USE_FIXED_QT_ADD_RESOURCE_BASE TRUE)
-# special case end
-
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Network) # special case
-find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Widgets) # special case
+find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Widgets Gui) # special case
+qt_internal_project_setup()
 
 if(NOT TARGET Qt::Network)
     message(NOTICE "Skipping the build as the condition \"TARGET Qt::Network\" is not met.")
