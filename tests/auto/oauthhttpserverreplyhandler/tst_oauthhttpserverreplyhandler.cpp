@@ -21,8 +21,10 @@ class tst_QOAuthHttpServerReplyHandler : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
-    void networkReplyErrors_data();
-    void networkReplyErrors();
+    void tokenReplyErrors_data();
+    void tokenReplyErrors();
+    void tokenReplyContentFormats_data();
+    void tokenReplyContentFormats();
     void callback_data();
     void callback();
     void callbackCaching();
@@ -34,7 +36,7 @@ private Q_SLOTS:
     void callbackHost();
 };
 
-void tst_QOAuthHttpServerReplyHandler::networkReplyErrors_data()
+void tst_QOAuthHttpServerReplyHandler::tokenReplyErrors_data()
 {
     using Error = QAbstractOAuth::Error;
     QString tokenResponse;
@@ -84,7 +86,7 @@ void tst_QOAuthHttpServerReplyHandler::networkReplyErrors_data()
         << tokenResponse << Error::ServerError << u"Unknown Content-type"_s;
 }
 
-void tst_QOAuthHttpServerReplyHandler::networkReplyErrors()
+void tst_QOAuthHttpServerReplyHandler::tokenReplyErrors()
 {
     using Error = QAbstractOAuth::Error;
     QFETCH(const QString, tokenResponse);
@@ -115,6 +117,77 @@ void tst_QOAuthHttpServerReplyHandler::networkReplyErrors()
     expectWarning(expectedWarningDetails);
     QTRY_COMPARE(tokenErrorSpy.size(), 1);
     QCOMPARE(tokenErrorSpy.at(0).at(0).value<Error>(), expectedError);
+}
+
+void tst_QOAuthHttpServerReplyHandler::tokenReplyContentFormats_data()
+{
+    QTest::addColumn<QByteArray>("tokenResponse");
+
+    QByteArray tokenResponse =
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: application/json\r\n"
+            "\r\n"
+            R"(
+            {
+                "access_token": "an-access-token",
+                "refresh_token": "a-refresh-token",
+                "expires_in": 3600
+            })";
+    QTest::addRow("application/json") << tokenResponse;
+
+    tokenResponse =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/html\r\n"
+        "\r\n"
+        "access_token=an-access-token&"
+        "refresh_token=a-refresh-token&"
+        "expires_in=3600";
+    QTest::addRow("text/html") << tokenResponse;
+
+    tokenResponse =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: application/x-www-form-urlencoded\r\n"
+        "\r\n"
+        "access_token=an-access-token&"
+        "refresh_token=a-refresh-token&"
+        "expires_in=3600";
+    QTest::addRow("application/x-www-form-urlencoded") << tokenResponse;
+}
+
+void tst_QOAuthHttpServerReplyHandler::tokenReplyContentFormats()
+{
+    QFETCH(const QByteArray, tokenResponse);
+
+    WebServer authorizationServer([&](const WebServer::HttpRequest &request, QTcpSocket *socket) {
+        if (request.url.path() == QLatin1String("/tokenEndpoint"))
+            socket->write(tokenResponse);
+    });
+
+    QOAuth2AuthorizationCodeFlow oauth2;
+    QOAuthHttpServerReplyHandler replyHandler;
+    oauth2.setReplyHandler(&replyHandler);
+    oauth2.setAuthorizationUrl(QUrl{"authorizationEndpoint"_L1});
+    oauth2.setAccessTokenUrl(authorizationServer.url("tokenEndpoint"_L1));
+    oauth2.setState("a-state"_L1);
+    QSignalSpy tokenDataReceivedSpy(&replyHandler, &QOAuthHttpServerReplyHandler::tokensReceived);
+
+    oauth2.grant();
+
+    // Conclude authorization stage so that authorization server gets a token request
+    emit replyHandler.callbackReceived({{ "code"_L1, "a-code"_L1 }, { "state"_L1, "a-state"_L1 }});
+    QTRY_COMPARE_EQ(tokenDataReceivedSpy.size(), 1);
+
+    const auto tokenData = tokenDataReceivedSpy.at(0).at(0).toMap();
+    QCOMPARE_EQ(tokenData.size(), 3);
+
+    QCOMPARE_EQ(oauth2.token(), "an-access-token"_L1);
+    QCOMPARE_EQ(tokenData.value("access_token"_L1), oauth2.token());
+
+    QCOMPARE_EQ(oauth2.refreshToken(), "a-refresh-token"_L1);
+    QCOMPARE_EQ(tokenData.value("refresh_token"_L1), oauth2.refreshToken());
+
+    QCOMPARE_EQ(tokenData.value("expires_in"_L1), 3600);
+    QVERIFY(oauth2.expirationAt().isValid());
 }
 
 void tst_QOAuthHttpServerReplyHandler::callback_data()

@@ -176,7 +176,7 @@ QNetworkReply *QOAuth1Private::requestToken(QNetworkAccessManager::Operation ope
     }
     else if (operation == QNetworkAccessManager::PostOperation) {
         QUrlQuery query = QOAuth1Private::createQuery(remainingParameters);
-        const QByteArray data = query.toString(QUrl::FullyEncoded).toUtf8();
+        const QByteArray data = query.toString(QUrl::FullyEncoded).toLatin1();
         request.setHeader(QNetworkRequest::ContentTypeHeader,
                           QStringLiteral("application/x-www-form-urlencoded"));
         reply = networkAccessManager()->post(request, data);
@@ -275,7 +275,8 @@ void QOAuth1::prepareRequest(QNetworkRequest *request, const QByteArray &verb,
         request->header(QNetworkRequest::ContentTypeHeader).toByteArray()
             == "application/x-www-form-urlencoded") {
         QUrlQuery query(QString::fromUtf8(body));
-        for (const auto &item : query.queryItems(QUrl::FullyDecoded))
+        const auto items = query.queryItems(QUrl::FullyDecoded);
+        for (const auto &item : items)
             signingParams.insert(item.first, item.second);
     }
     setup(request, signingParams, verb);
